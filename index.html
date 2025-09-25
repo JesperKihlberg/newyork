@@ -4,129 +4,1763 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>#000000</title>
-    <link type="image/x-icon" rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAHklEQVQ4T2NkYGD4z0ABYBw1gGE0DBhGw4BhWIQBAE5OEAELnjVHAAAAAElFTkSuQmCC">
+    <title>NYC Travel Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
     <style>
-        :root {
-            --color: #000000;
-            --color-transparent: #00000022;
-        }
-
-        ::selection {
-            background: var(--color-transparent);
-        }
-
-        html,
-        body {
-            background: var(--color);
-            height: 100%;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .header .dates {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            overflow-x: auto;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            flex: 0 0 auto;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6c757d;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: #2c3e50;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .content {
+            padding: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        .overview {
+            display: none;
+        }
+
+        .overview.active {
+            display: block;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .info-list {
+            list-style: none;
+        }
+
+        .info-list li {
+            padding: 6px 0;
+            font-size: 0.9rem;
+        }
+
+        .info-list li:before {
+            content: "▸ ";
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .day-content {
+            display: none;
+        }
+
+        .day-content.active {
+            display: block;
+        }
+
+        .day-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .day-header h2 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .day-header .theme {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .schedule-overview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        #map,
+        .day-map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+
+        .overview-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            background: #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .locations-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .location-item {
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            transition: transform 0.2s ease;
+        }
+
+        .location-search {
+            height: 48px;
+            width: 48px;
+            background-color: lightgray;
+            text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            font-size: 24px;
         }
 
-        #color {
+        .location-item:hover {
+            transform: translateX(5px);
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .location-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-number {
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Day-specific colors for location numbers - matching map markers exactly */
+        .day-0 .location-number {
+            background: #FF6B6B;
+        }
+
+        .day-1 .location-number {
+            background: #4ECDC4;
+        }
+
+        .day-2 .location-number {
+            background: #45B7D1;
+        }
+
+        .day-3 .location-number {
+            background: #96CEB4;
+        }
+
+        .day-4 .location-number {
+            background: #FECA57;
+        }
+
+        .day-5 .location-number {
+            background: #FF9FF3;
+        }
+
+        .day-6 .location-number {
+            background: #54A0FF;
+        }
+
+        .day-7 .location-number {
+            background: #5F27CD;
+        }
+
+        .location-time {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: auto;
+        }
+
+        .location-type {
+            display: inline-block;
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .location-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .location-notes {
+            color: #28a745;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .location-address {
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .file-input-section {
+            display: none;
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .file-input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
             background: white;
-            color: var(--color);
-            font-size: 2.5rem;
-            font-weight: 300;
-            padding: 2.25rem 3rem;
-            font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, helvetica neue, helvetica, ubuntu, roboto, noto, segoe ui, arial, sans-serif;
-            cursor: text;
+            width: 100%;
+        }
+
+        .shopping-districts {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .shopping-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+        }
+
+        .shopping-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+
+            .location-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .location-time {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
     </style>
 </head>
 
 <body>
-    <p id="color">#000000</p>
+    <div class="container">
+        <div class="header">
+            <h1 id="trip-title">NYC Travel Planner</h1>
+            <div class="dates" id="trip-dates">Select your itinerary file</div>
+        </div>
+
+        <div class="file-input-section">
+            <h3>Import Your Itinerary</h3>
+            <input type="file" id="jsonFile" accept=".json,.txt" class="file-input">
+            <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                Upload your JSON travel itinerary file to view your trip details<br>
+                <button onclick="loadSampleData()"
+                    style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Or try with sample data
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-tabs" id="navTabs" style="display: none;">
+            <button class="nav-tab active" onclick="showSection('overview')">Overview</button>
+        </div>
+
+        <div class="content">
+            <div id="overview" class="overview active">
+                <div class="loading">Upload your itinerary file to get started!</div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function randomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1) + min);
+        let tripData = null;
+        let overviewMap = null;
+        let dayMaps = {};
+        let markers = [];
+
+        // File upload handler
+        document.getElementById('jsonFile').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name, 'Type:', file.type);
+
+                // Accept any file that ends with .json or has json content
+                if (file.name.toLowerCase().endsWith('.json') || file.type === 'application/json' || file.type === 'text/plain') {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        try {
+                            const content = e.target.result;
+                            console.log('File content loaded, length:', content.length);
+                            tripData = JSON.parse(content);
+                            console.log('JSON parsed successfully:', tripData);
+                            initializeApp();
+                        } catch (error) {
+                            alert('Error parsing JSON file. Please check the format.\n\nError: ' + error.message);
+                            console.error('JSON parsing error:', error);
+                        }
+                    };
+                    reader.onerror = function (e) {
+                        alert('Error reading file: ' + e.target.error);
+                        console.error('File reading error:', e);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please select a JSON file (.json extension)');
+                }
+            }
+        });
+
+        function initializeApp() {
+            if (!tripData) return;
+
+            // Update header
+            document.getElementById('trip-title').textContent = tripData.trip_info.title;
+            document.getElementById('trip-dates').textContent = tripData.trip_info.dates;
+
+            // Show navigation
+            document.getElementById('navTabs').style.display = 'flex';
+
+            // Create navigation tabs
+            createNavigation();
+
+            // Create overview
+            createOverview();
+
+            // Initialize overview map
+            setTimeout(() => initializeOverviewMap(), 100);
+
+            // Create day content
+            createDayContent();
+
+            // Initialize map
+            initializeMap();
         }
 
-        function hslToHex(h, s, l) {
-            h /= 360;
-            s /= 100;
-            l /= 100;
-            var r = void 0,
-                g = void 0,
-                b = void 0;
-            if (s === 0) {
-                r = g = b = l; // achromatic
-            } else {
-                var hue2rgb = function hue2rgb(p, q, t) {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                };
-                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                var p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
+        function createNavigation() {
+            const navTabs = document.getElementById('navTabs');
+            navTabs.innerHTML = '<button class="nav-tab active" onclick="showSection(\'overview\')">Overview</button>';
+
+            if (tripData.days) {
+                tripData.days.forEach(day => {
+                    const button = document.createElement('button');
+                    button.className = 'nav-tab';
+                    button.textContent = `Day ${day.day}`;
+                    button.onclick = () => showSection(`day-${day.day}`);
+                    navTabs.appendChild(button);
+                });
             }
-            var toHex = function toHex(x) {
-                var hex = Math.round(x * 255).toString(16);
-                return hex.length === 1 ? '0' + hex : hex;
-            };
-            return '#' + toHex(r) + toHex(g) + toHex(b);
         }
 
-        window.onload = function () {
-            let stopProp = function (ev) {
-                ev.stopPropagation();
+        function createOverview() {
+            const overview = document.getElementById('overview');
+            const info = tripData.trip_info;
+
+            let overviewHTML = `
+                <div class="info-card">
+                    <h3>🏨 Accommodation</h3>
+                    <p><strong>${info.accommodation.name}</strong></p>
+                    <p>${info.accommodation.address}</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>✈️ Departure</h3>
+                    <p><strong>${info.departure.date} at ${info.departure.time}</strong></p>
+                    <p>From ${info.departure.airport}</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>📱 Essential Apps</h3>
+                    <ul class="info-list">
+                        ${info.essential_apps.map(app => `<li>${app}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>🎫 Advance Bookings</h3>
+                    <ul class="info-list">
+                        ${info.advance_bookings.map(booking => `<li>${booking}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>💰 Money Saving Tips</h3>
+                    <ul class="info-list">
+                        ${info.money_saving_tips.map(tip => `<li>${tip}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+
+            if (info.shopping_districts_summary) {
+                overviewHTML += `
+                    <div class="info-card">
+                        <h3>🛍️ Shopping Districts</h3>
+                        <div class="shopping-districts">
+                            ${Object.entries(info.shopping_districts_summary).map(([district, description]) => `
+                                <div class="shopping-item">
+                                    <strong>${district.charAt(0).toUpperCase() + district.slice(1).replace('_', ' ')}</strong>
+                                    ${description}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
             }
 
-            var colorElement = document.getElementById("color");
-            colorElement.addEventListener("click", stopProp, false);
-            colorElement.addEventListener("mousedown", stopProp, false);
-
-            var setFavicon = function (hex) {
-                var canvas = document.createElement('canvas');
-                canvas.width = 16;
-                canvas.height = 16;
-                var ctx = canvas.getContext('2d');
-                ctx.fillStyle = hex;
-                ctx.fillRect(0, 0, 16, 16);
-                document.getElementsByTagName('link')[0].href = canvas.toDataURL("image/x-icon");
+            if (info.american_brand_highlights) {
+                overviewHTML += `
+                    <div class="info-card">
+                        <h3>🇺🇸 American Brand Highlights</h3>
+                        <ul class="info-list">
+                            ${info.american_brand_highlights.map(brand => `<li>${brand}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
             }
 
-            var setRandomColor = function setRandomColor() {
-                var h = void 0,
-                    s = void 0,
-                    l = void 0;
+            // Add overview map
+            overviewHTML += `
+                <div class="map-container">
+                    <h3 style="margin-bottom: 15px;">🗺️ Full Trip Overview</h3>
+                    <div id="overview-map" class="overview-map"></div>
+                    <div style="font-size: 0.9rem; color: #666; margin-top: 10px; text-align: center;">
+                        Numbers on map markers correspond to the order of locations in each day's itinerary
+                    </div>
+                </div>
+            `;
 
-                h = randomInt(0, 359);
-                s = randomInt(55, 75);
-                l = randomInt(40, 60);
+            overview.innerHTML = overviewHTML;
+        }
 
-                document.documentElement.style.setProperty('--color', 'hsl(' + h + ', ' + s + '%, ' + l + '%)');
-                var hex = hslToHex(h, s, l);
-                document.title = hex;
-                colorElement.innerHTML = hex;
-                document.documentElement.style.setProperty('--color-transparent', hex + '22');
+        function createDayContent() {
+            const content = document.querySelector('.content');
 
-                setFavicon(hex);
-            };
-            setRandomColor();
+            if (tripData.days) {
+                tripData.days.forEach(day => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.id = `day-${day.day}`;
+                    dayDiv.className = `day-content day-${day.day}`;
 
-            var body = document.getElementsByTagName("body")[0];
-            body.addEventListener("mousedown", function (ev) {
-                ev.preventDefault();
+                    let scheduleHTML = '';
+                    if (day.schedule) {
+                        scheduleHTML = `
+                            <div class="schedule-overview">
+                                <strong>📅 Schedule:</strong><br>
+                                Morning: ${day.schedule.morning || 'Flexible'}<br>
+                                Afternoon: ${day.schedule.afternoon || 'Flexible'}<br>
+                                Evening: ${day.schedule.evening || 'Flexible'}
+                            </div>
+                        `;
+                    }
+
+                    dayDiv.innerHTML = `
+                        <div class="day-header">
+                            <h2>${day.day_name || `Day ${day.day}`}</h2>
+                            <div class="theme">${day.theme || ''}</div>
+                            <div style="font-size: 0.85rem; margin-top: 8px; opacity: 0.9;">
+                                ${day.overview || ''}
+                            </div>
+                        </div>
+                        
+                        ${scheduleHTML}
+                        
+                        <div class="map-container">
+                            <h3 style="margin-bottom: 15px;">📍 Day ${day.day} Locations</h3>
+                            <div id="map-day-${day.day}" class="day-map"></div>
+                        </div>
+                        
+                        <div class="locations-list">
+                            <h3 style="margin-bottom: 15px;">📝 Day Itinerary</h3>
+              ${day.locations ? day.locations.map((location, index) => {
+                        // Google search query: name + address (if available)
+                        const query = encodeURIComponent(location.name + (location.address ? (', ' + location.address) : ''));
+                        const googleUrl = `https://www.google.com/search?q=${query}`;
+                        return `
+                <div class="location-item">
+                  <div class="location-header">
+                    <div class="location-name">
+                      <span class="location-number">${index + 1}</span>
+                      ${location.name}
+                      <a class="location-search" href="${googleUrl}" target="_blank" rel="noopener" title="Search on Google" style="margin-left:8px;font-size:1.1em;vertical-align:middle;" aria-label="Search ${location.name} on Google">🔎</a>
+                    </div>
+                    ${location.time ? `<div class="location-time">${location.time}</div>` : ''}
+                  </div>
+                  ${location.type ? `<div class="location-type">${location.type}</div>` : ''}
+                  ${location.description ? `<div class="location-description">${location.description}</div>` : ''}
+                  ${location.notes ? `<div class="location-notes">💡 ${location.notes}</div>` : ''}
+                  ${location.address ? `<div class="location-address">📍 ${location.address}</div>` : ''}
+                </div>
+                `;
+                    }).join('') : '<p>No locations planned for this day.</p>'}
+                        </div>
+                        
+                        ${day.food_options ? `
+                            <div class="info-card">
+                                <h3>🍴 Food Options</h3>
+                                <ul class="info-list">
+                                    ${day.food_options.map(option => `<li>${option}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        ${day.notes ? `
+                            <div class="info-card">
+                                <h3>📌 Day Notes</h3>
+                                <ul class="info-list">
+                                    ${day.notes.map(note => `<li>${note}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    `;
+
+                    content.appendChild(dayDiv);
+                });
+            }
+        }
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.overview, .day-content').forEach(section => {
+                section.classList.remove('active');
             });
-            body.addEventListener("click", function () {
-                setRandomColor();
-            }, false);
+
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+
+            // If showing a day, initialize its map
+            if (sectionId.startsWith('day-')) {
+                const dayNumber = sectionId.split('-')[1];
+                setTimeout(() => initializeDayMap(dayNumber), 100);
+            }
+        }
+
+        function initializeMap() {
+            // This function is kept for compatibility but maps are now initialized per section
+            console.log('Maps will be initialized per section');
+        }
+
+        function initializeOverviewMap() {
+            if (!tripData || !tripData.days) return;
+
+            const mapElement = document.getElementById('overview-map');
+            if (!mapElement) return;
+
+            try {
+                if (overviewMap) {
+                    overviewMap.remove();
+                }
+
+                overviewMap = L.map('overview-map').setView([40.7589, -73.9851], 11);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(overviewMap);
+
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
+                const allCoords = [];
+
+                // Add markers for each day
+                tripData.days.forEach((day, dayIndex) => {
+                    if (day.locations) {
+                        const dayColor = colors[day.day % colors.length]; // Use day.day instead of dayIndex
+                        day.locations.forEach((location, locationIndex) => {
+                            if (location.coordinates && location.coordinates.length >= 2) {
+                                // Ensure coordinates are [lat, lng] format
+                                const coords = [location.coordinates[0], location.coordinates[1]];
+                                console.log(`Day ${day.day}, Location ${locationIndex + 1}: ${location.name} at [${coords[0]}, ${coords[1]}]`);
+
+                                const icon = createCustomIcon(dayColor, locationIndex + 1);
+                                const marker = L.marker(coords, { icon: icon }).addTo(overviewMap);
+
+                                marker.bindPopup(`
+                                    <div class="custom-popup">
+                                        <div class="popup-title">Day ${day.day} - Stop ${locationIndex + 1}</div>
+                                        <div class="popup-location">${location.name}</div>
+                                        <div class="popup-activities">${location.description || location.notes || ''}</div>
+                                        ${location.time ? `<div style="font-weight: bold; margin-top: 5px;">Time: ${location.time}</div>` : ''}
+                                    </div>
+                                `);
+
+                                allCoords.push(coords);
+                            }
+                        });
+                    }
+                });
+
+                // Fit map to show all markers
+                if (allCoords.length > 0) {
+                    const group = new L.featureGroup();
+                    allCoords.forEach(coord => {
+                        L.marker(coord).addTo(group);
+                    });
+                    overviewMap.fitBounds(group.getBounds().pad(0.1));
+                }
+
+            } catch (error) {
+                console.error('Error initializing overview map:', error);
+                mapElement.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Map could not be loaded</div>';
+            }
+        }
+
+        function initializeDayMap(dayNumber) {
+            if (!tripData || !tripData.days) return;
+
+            const day = tripData.days.find(d => d.day == dayNumber);
+            if (!day || !day.locations) return;
+
+            const mapElement = document.getElementById(`map-day-${dayNumber}`);
+            if (!mapElement) return;
+
+            try {
+                // Clean up existing map
+                if (dayMaps[dayNumber]) {
+                    dayMaps[dayNumber].remove();
+                }
+
+                dayMaps[dayNumber] = L.map(`map-day-${dayNumber}`).setView([40.7589, -73.9851], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(dayMaps[dayNumber]);
+
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
+                const dayColor = colors[day.day % colors.length]; // Use day.day for consistent color
+                const dayCoords = [];
+
+                console.log(`Initializing map for Day ${day.day} with color ${dayColor}`);
+
+                // Add markers for this day's locations
+                day.locations.forEach((location, index) => {
+                    if (location.coordinates && location.coordinates.length >= 2) {
+                        // Ensure coordinates are [lat, lng] format
+                        const coords = [location.coordinates[0], location.coordinates[1]];
+                        console.log(`Day ${day.day}, Location ${index + 1}: ${location.name} at [${coords[0]}, ${coords[1]}]`);
+
+                        const icon = createCustomIcon(dayColor, index + 1);
+                        const marker = L.marker(coords, { icon: icon }).addTo(dayMaps[dayNumber]);
+
+                        marker.bindPopup(`
+                            <div class="custom-popup">
+                                <div class="popup-title">${index + 1}. ${location.name}</div>
+                                <div class="popup-location">${location.address || ''}</div>
+                                <div class="popup-activities">${location.description || ''}</div>
+                                ${location.notes ? `<div style="font-style: italic; color: #28a745; margin-top: 5px;">${location.notes}</div>` : ''}
+                                ${location.time ? `<div style="font-weight: bold; color: #667eea; margin-top: 5px;">Time: ${location.time}</div>` : ''}
+                            </div>
+                        `);
+
+                        dayCoords.push(coords);
+                    }
+                });
+
+                // Fit map to show all day markers
+                if (dayCoords.length > 0) {
+                    if (dayCoords.length === 1) {
+                        dayMaps[dayNumber].setView(dayCoords[0], 14);
+                    } else {
+                        const group = new L.featureGroup();
+                        dayCoords.forEach(coord => {
+                            L.marker(coord).addTo(group);
+                        });
+                        dayMaps[dayNumber].fitBounds(group.getBounds().pad(0.1));
+                    }
+                }
+
+            } catch (error) {
+                console.error(`Error initializing day ${dayNumber} map:`, error);
+                mapElement.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <div style="font-size: 1.1rem; margin-bottom: 10px;">📍 ${day.locations.length} locations planned</div>
+                        <div style="font-size: 0.9rem;">Map could not be loaded</div>
+                        <div style="margin-top: 10px; font-size: 0.8rem;">Check browser console for errors</div>
+                    </div>
+                `;
+            }
+        }
+
+        function createCustomIcon(color, number) {
+            return L.divIcon({
+                html: `<div style="
+                    background-color: ${color};
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    color: white;
+                    font-size: 12px;
+                ">${number}</div>`,
+                className: 'custom-marker',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+        }
+
+        // Initialize with sample data if no file is uploaded
+        window.onload = function () {
+            // You can uncomment the line below to load with the sample data automatically
+            loadSampleData()
         };
+
+        // Load sample data function  
+        function loadSampleData() {
+            // Complete NYC itinerary data
+            fetch('data:application/json;base64,' + btoa(`{
+  "trip_info": {
+    "title": "NYC Week-Long Itinerary",
+    "dates": "October 12-18, 2024",
+    "accommodation": {
+      "name": "Lower East Side Hotel",
+      "address": "Orchard Street, Lower East Side",
+      "coordinates": [40.7186, -73.9897]
+    },
+    "departure": {
+      "date": "October 18, 2024",
+      "time": "20:25",
+      "airport": "JFK",
+      "coordinates": [40.6413, -73.7781]
+    },
+    "essential_apps": ["Citymapper - transit", "Yelp - food trucks and snack spots", "Foursquare - street food recommendations"],
+    "advance_bookings": ["9/11 Memorial Museum", "One World Observatory", "MoMA"],
+    "money_saving_tips": ["Food trucks cheaper than restaurants", "Happy hour specials at markets", "Free samples at specialty food stores", "MetroCard 7-day unlimited: $33"],
+    "shopping_districts_summary": {
+      "williamsburg": "Vintage, local designers, Levi's Brooklyn flagship",
+      "canal_street": "Knockoffs, electronics, souvenirs",
+      "chelsea_market": "Artisanal goods, food vendors",
+      "fifth_avenue": "Luxury flagships, department stores, Nike flagship",
+      "times_square": "Nike flagship, Levi's store, mainstream American brands",
+      "soho": "Designer boutiques, Nike SoHo, Carhartt WIP, mainstream to luxury",
+      "nolita": "Independent designers, smaller boutiques"
+    },
+    "american_brand_highlights": [
+      "Nike: Flagship stores in Times Square (5th Ave) and SoHo",
+      "Levi's: Times Square store and Brooklyn flagship in Williamsburg",
+      "Carhartt WIP: SoHo location for workwear and streetwear",
+      "American Supermarket: Whole Foods SoHo for authentic US grocery experience"
+    ]
+  },
+  "days": [
+    {
+      "day": 0,
+      "date": "October 11, 2024",
+      "day_name": "Saturday Night Arrival",
+      "theme": "Late Night Arrival",
+      "overview": "Late night options near LES",
+      "locations": [
+        {
+          "name": "Katz's Delicatessen",
+          "type": "restaurant",
+          "coordinates": [40.7223431, -73.987353],
+          "address": "205 E Houston St",
+          "description": "24-hour iconic deli on Saturdays",
+          "time_slot": "late_night",
+          "notes": "Historic pastrami sandwiches - Saturdays only 24hrs, otherwise closes 11pm"
+        },
+        {
+          "name": "Crif Dogs",
+          "type": "restaurant",
+          "coordinates": [40.727057, -73.9837711],
+          "address": "113 St Marks Pl",
+          "description": "Late night hot dogs until 2-3am",
+          "time_slot": "late_night",
+          "notes": "East Village spot, bacon-wrapped dogs, cheesy tots"
+        },
+        {
+          "name": "Ray's Candy Store",
+          "type": "restaurant",
+          "coordinates": [40.7262821, -73.9835462],
+          "address": "113 Avenue A",
+          "description": "24-hour candy shop with fried Oreos",
+          "time_slot": "late_night",
+          "notes": "Famous egg creams and fried Oreos, NYC institution since 1974"
+        },
+        {
+          "name": "Vanessa's Dumpling House",
+          "type": "restaurant",
+          "coordinates": [40.7182938, -73.9917781],
+          "address": "118A Eldridge St",
+          "description": "Open until midnight",
+          "time_slot": "late_night",
+          "notes": "Affordable dumplings, closer to hotel"
+        }
+      ]
+    },
+    {
+      "day": 1,
+      "date": "October 12, 2024",
+      "day_name": "Sunday",
+      "theme": "Lower Manhattan/Little Italy",
+      "overview": "Post-jetlag recovery with harbor views and Italian evening",
+      "schedule": {
+        "morning": "10:00-12:30",
+        "afternoon": "12:30-17:00",
+        "evening": "17:00-21:00"
+      },
+      "locations": [
+        {
+          "name": "Clinton St. Baking Company",
+          "type": "restaurant",
+          "coordinates": [40.7211788, -73.9838832],
+          "address": "4 Clinton St",
+          "description": "Famous for blueberry pancakes and egg sandwiches",
+          "time_slot": "morning",
+          "time": "10:00",
+          "notes": "3-min walk from hotel, beloved LES institution"
+        },
+        {
+          "name": "Staten Island Ferry Terminal",
+          "type": "attraction",
+          "coordinates": [40.7004, -74.0132],
+          "address": "4 Whitehall Terminal",
+          "description": "Free ferry with Statue of Liberty views",
+          "time_slot": "morning",
+          "time": "11:00-12:30",
+          "notes": "Round trip, fresh air to combat jetlag, 20-min walk or 4/6 train to Bowling Green"
+        },
+        {
+          "name": "Stone Street Historic District",
+          "type": "area",
+          "coordinates": [40.7042693, -74.0104174],
+          "address": "Stone Street",
+          "description": "Cobblestone streets and outdoor dining",
+          "time_slot": "afternoon",
+          "time": "12:30",
+          "notes": "Weekend crowds but great atmosphere"
+        },
+        {
+          "name": "Stone Street Coffee Company",
+          "type": "restaurant",
+          "coordinates": [40.7045, -74.0115],
+          "address": "Stone Street",
+          "description": "Artisanal coffee and pastries",
+          "time_slot": "afternoon",
+          "time": "13:00",
+          "notes": "Grab lunch and explore"
+        },
+        {
+          "name": "Tribeca",
+          "type": "neighborhood",
+          "coordinates": [40.7195, -74.0089],
+          "address": "Tribeca area",
+          "description": "Upscale food markets and trendy snacks",
+          "time_slot": "afternoon",
+          "time": "14:30-16:00",
+          "notes": "Locanda Verde, Kaffe 1668, Tribeca Whole Foods"
+        },
+        {
+          "name": "Little Italy",
+          "type": "neighborhood",
+          "coordinates": [40.7191, -73.9973],
+          "address": "Mulberry Street",
+          "description": "Classic Italian-American atmosphere",
+          "time_slot": "evening",
+          "time": "17:00-21:00",
+          "notes": "Focus on street vendors and pastries to-go"
+        },
+        {
+          "name": "Ferrara Bakery",
+          "type": "restaurant",
+          "coordinates": [40.7191024, -73.9970647],
+          "address": "195 Grand St",
+          "description": "Cannoli, gelato, espresso",
+          "time_slot": "evening",
+          "time": "18:30",
+          "notes": "Historic Italian bakery, grab pastries to walk around"
+        }
+      ],
+      "notes": [
+        "Download NYC Ferry and MTA apps",
+        "Bring layers - harbor can be windy",
+        "Stone Street has weekend crowds but great atmosphere",
+        "15-min walk back to LES via Broome Street"
+      ]
+    },
+    {
+      "day": 2,
+      "date": "October 13, 2024",
+      "day_name": "Monday",
+      "theme": "Brooklyn Bridge/DUMBO/Williamsburg",
+      "overview": "Brooklyn adventure with iconic bridge walk",
+      "schedule": {
+        "morning": "9:00-13:00",
+        "afternoon": "13:00-17:00",
+        "evening": "17:00-20:00"
+      },
+      "locations": [
+        {
+          "name": "Russ & Daughters",
+          "type": "restaurant",
+          "coordinates": [40.7225, -73.9892],
+          "address": "179 E Houston St",
+          "description": "Iconic LES appetizing shop",
+          "time_slot": "morning",
+          "time": "9:00",
+          "notes": "Historic Jewish appetizing, bagels and lox"
+        },
+        {
+          "name": "Brooklyn Bridge",
+          "type": "attraction",
+          "coordinates": [40.7061, -73.9969],
+          "address": "Brooklyn Bridge entrance near City Hall",
+          "description": "Iconic bridge walk",
+          "time_slot": "morning",
+          "time": "10:30-11:30",
+          "notes": "Start Manhattan side, photos at center, 25-min walk to entrance"
+        },
+        {
+          "name": "DUMBO",
+          "type": "neighborhood",
+          "coordinates": [40.7033, -73.9881],
+          "address": "DUMBO, Brooklyn",
+          "description": "Waterfront area with amazing views",
+          "time_slot": "late_morning",
+          "time": "11:30-13:00",
+          "notes": "Brooklyn Bridge Park waterfront, Washington Street skyline shot"
+        },
+        {
+          "name": "Time Out Market Brooklyn",
+          "type": "food_hall",
+          "coordinates": [40.704, -73.9863],
+          "address": "55 Water St",
+          "description": "Food hall with NYC views",
+          "time_slot": "late_morning",
+          "time": "12:00-13:00",
+          "notes": "Various food vendors, great Manhattan skyline views"
+        },
+        {
+          "name": "Williamsburg",
+          "type": "neighborhood",
+          "coordinates": [40.7081, -73.9571],
+          "address": "Bedford Avenue, Williamsburg",
+          "description": "6+ hours of trendy shopping and food",
+          "time_slot": "afternoon",
+          "time": "13:30-20:00",
+          "notes": "Take NYC Ferry from DUMBO to Williamsburg"
+        },
+        {
+          "name": "Levi's Store Brooklyn",
+          "type": "shopping",
+          "coordinates": [40.7144, -73.9617],
+          "address": "98 N 6th St",
+          "description": "Authentic American denim flagship",
+          "time_slot": "afternoon",
+          "notes": "Historic Levi's location"
+        },
+        {
+          "name": "Bedford Avenue Shopping",
+          "type": "shopping",
+          "coordinates": [40.7144, -73.9617],
+          "address": "Bedford Avenue",
+          "description": "Vintage stores, local designers, record shops",
+          "time_slot": "afternoon",
+          "notes": "Main shopping strip in Williamsburg"
+        },
+        {
+          "name": "Artists & Fleas",
+          "type": "shopping",
+          "coordinates": [40.7145, -73.9617],
+          "address": "70 N 7th St",
+          "description": "Local artisan market",
+          "time_slot": "afternoon",
+          "notes": "Unique shopping, local artisans"
+        }
+      ],
+      "food_options": ["Street food trucks throughout day", "L'industrie Pizzeria - square slice pizza", "Peter Luger area food trucks", "Dimes Market - trendy snacks"],
+      "notes": [
+        "Bridge walk takes 30-45 mins depending on crowds",
+        "Williamsburg L train can be crowded evenings",
+        "Bring comfortable walking shoes",
+        "Check Smorgasburg schedule (weekends only)",
+        "Take L train back to Manhattan (1st Ave stop, then walk to LES)"
+      ]
+    },
+    {
+      "day": 3,
+      "date": "October 14, 2024",
+      "day_name": "Tuesday",
+      "theme": "Lower Manhattan/Chinatown",
+      "overview": "Memorial visit, Canal Street shopping, then Chinatown food experience",
+      "schedule": {
+        "morning": "9:00-13:00",
+        "afternoon": "14:00-16:00 Canal St, 16:00-18:00 Chinatown",
+        "evening": "18:00-20:00"
+      },
+      "locations": [
+        {
+          "name": "Breakfast Options Day 3",
+          "type": "restaurant",
+          "coordinates": [40.7186, -73.9897],
+          "address": "LES area",
+          "description": "Quick LES breakfast before memorial visit",
+          "time_slot": "morning",
+          "time": "9:00",
+          "notes": "Options: Dimes (85 Willett St) - trendy breakfast, Local LES bagel shop, Coffee cart"
+        },
+        {
+          "name": "9/11 Memorial & Museum",
+          "type": "attraction",
+          "coordinates": [40.7115, -74.0134],
+          "address": "180 Greenwich St",
+          "description": "Memorial and museum with timed entry",
+          "time_slot": "morning",
+          "time": "10:30-12:00",
+          "notes": "Book timed tickets in advance via 911memorial.org, audio guide recommended"
+        },
+        {
+          "name": "One World Observatory",
+          "type": "attraction",
+          "coordinates": [40.7127, -74.0134],
+          "address": "285 Fulton St",
+          "description": "Observation deck",
+          "time_slot": "late_morning",
+          "time": "12:30",
+          "notes": "Book advance tickets, choose 1:00-2:00 PM slot, $37-47"
+        },
+        {
+          "name": "Canal Street Shopping",
+          "type": "shopping",
+          "coordinates": [40.7185, -74.002],
+          "address": "Canal Street",
+          "description": "2 hours knockoffs, electronics, souvenirs",
+          "time_slot": "afternoon",
+          "time": "14:00-16:00",
+          "notes": "Street vendors, unique finds, bargaining expected"
+        },
+        {
+          "name": "Chinatown",
+          "type": "neighborhood",
+          "coordinates": [40.7158, -73.997],
+          "address": "Mott Street area",
+          "description": "Food crawl leading to dinner (2+ hours)",
+          "time_slot": "late_afternoon",
+          "time": "16:00-18:00",
+          "notes": "15-min walk from Canal St, cash preferred at many vendors"
+        },
+        {
+          "name": "Nom Wah Tea Parlor",
+          "type": "restaurant",
+          "coordinates": [40.7154, -73.9975],
+          "address": "13 Doyers St",
+          "description": "Historic dim sum and tea house",
+          "time_slot": "afternoon",
+          "notes": "Historic spot, try har gow, siu mai"
+        },
+        {
+          "name": "Chinatown Ice Cream Factory",
+          "type": "restaurant",
+          "coordinates": [40.7165, -73.9985],
+          "address": "65 Bayard St",
+          "description": "Unique Asian ice cream flavors",
+          "time_slot": "afternoon",
+          "notes": "Taro, red bean, lychee flavors"
+        },
+        {
+          "name": "Ten Ren Tea",
+          "type": "shopping",
+          "coordinates": [40.7163, -73.9975],
+          "address": "75 Mott St",
+          "description": "Bubble tea and tea shopping",
+          "time_slot": "afternoon",
+          "notes": "Tea varieties to take home"
+        },
+        {
+          "name": "Columbus Park",
+          "type": "area",
+          "coordinates": [40.7152, -73.998],
+          "address": "67 Mulberry St",
+          "description": "Locals playing mahjong",
+          "time_slot": "evening",
+          "time": "18:00",
+          "notes": "Cultural observation spot before dinner"
+        },
+        {
+          "name": "Chinatown Dinner",
+          "type": "restaurant",
+          "coordinates": [40.7158, -73.997],
+          "address": "Various Chinatown restaurants",
+          "description": "Dinner in authentic Chinatown restaurant",
+          "time_slot": "evening",
+          "time": "18:30-20:00",
+          "notes": "Choose from Xi'an Famous Foods, Joe's Shanghai, or other authentic spots"
+        }
+      ],
+      "food_focus": [
+        "Joe's Shanghai - soup dumplings (xiaolongbao)",
+        "Street food sampling throughout afternoon",
+        "Chinese bakeries - egg tarts, pork buns to-go",
+        "Dinner: Xi'an Famous Foods - hand-pulled noodles, or authentic Chinatown restaurant"
+      ],
+      "notes": [
+        "Memorial timed entry required - book now",
+        "One World Observatory: skip-the-line recommended",
+        "Try: har gow, siu mai, egg tarts",
+        "15-min walk back to LES via Grand Street"
+      ]
+    },
+    {
+      "day": 4,
+      "date": "October 15, 2024",
+      "day_name": "Wednesday",
+      "theme": "Midtown West/Chelsea",
+      "overview": "Food halls and shopping districts",
+      "schedule": {
+        "morning": "9:30-12:30",
+        "afternoon": "12:30-17:00",
+        "evening": "17:00-20:00"
+      },
+      "locations": [
+        {
+          "name": "Breakfast Options Day 4",
+          "type": "restaurant",
+          "coordinates": [40.7341, -73.9896],
+          "address": "Union Square area",
+          "description": "Breakfast near Union Square before High Line",
+          "time_slot": "morning",
+          "time": "9:30",
+          "notes": "Options: Union Square Greenmarket (seasonal), Joe Coffee, Local diner near 14th St"
+        },
+        {
+          "name": "High Line",
+          "type": "attraction",
+          "coordinates": [40.748, -74.0048],
+          "address": "Gansevoort Street entrance",
+          "description": "Elevated park with art installations",
+          "time_slot": "morning",
+          "time": "10:00-12:00",
+          "notes": "Take 6 train to 14th St-Union Square, exit at 30th Street"
+        },
+        {
+          "name": "Hudson Yards",
+          "type": "shopping",
+          "coordinates": [40.7537, -74.002],
+          "address": "20 Hudson Yards",
+          "description": "Modern shopping complex",
+          "time_slot": "late_morning",
+          "time": "12:00",
+          "notes": "High-end shopping and dining, browse the shops"
+        },
+        {
+          "name": "Chelsea Market",
+          "type": "food_hall",
+          "coordinates": [40.742, -74.0062],
+          "address": "75 9th Ave",
+          "description": "4+ hours indoor food hall and shopping",
+          "time_slot": "afternoon",
+          "time": "12:30-17:00",
+          "notes": "All vendors accept cards, perfect for snack sampling"
+        },
+        {
+          "name": "Meatpacking District",
+          "type": "neighborhood",
+          "coordinates": [40.7407, -74.0063],
+          "address": "14th Street area",
+          "description": "Boutique shopping district",
+          "time_slot": "evening",
+          "time": "17:00-20:00",
+          "notes": "Designer outlets and boutiques"
+        },
+        {
+          "name": "Whitney Museum",
+          "type": "attraction",
+          "coordinates": [40.7396, -74.0089],
+          "address": "99 Gansevoort St",
+          "description": "Modern architecture (exterior viewing)",
+          "time_slot": "evening",
+          "notes": "Exterior appreciation, modern building design"
+        }
+      ],
+      "food_highlights": [
+        "Los Tacos No. 1 - authentic Mexican street tacos",
+        "Fat Witch Bakery - brownies",
+        "Sarabeth's - famous tomato soup and sandwiches",
+        "Chelsea Wine Vault - wine tasting"
+      ],
+      "shopping": ["Artists & Fleas - local artisan goods", "Chelsea Market shops - unique NYC items"],
+      "notes": [
+        "High Line gets crowded after 11 AM on weekdays",
+        "Chelsea Market accepts cards everywhere",
+        "Comfortable walking shoes essential",
+        "Take A/C/E or L train back to LES"
+      ]
+    },
+    {
+      "day": 5,
+      "date": "October 16, 2024",
+      "day_name": "Thursday",
+      "theme": "Midtown East - Perfect Snack Day",
+      "overview": "World-class art and iconic NYC street food",
+      "schedule": {
+        "morning": "9:00-13:30",
+        "afternoon": "13:30-20:00"
+      },
+      "locations": [
+        {
+          "name": "Eisenberg's Sandwich Shop",
+          "type": "restaurant",
+          "coordinates": [40.7446, -73.9882],
+          "address": "174 5th Ave",
+          "description": "Traditional NYC diner since 1929",
+          "time_slot": "morning",
+          "time": "9:30",
+          "notes": "Classic counter seating, try pastrami and eggs or blueberry pancakes"
+        },
+        {
+          "name": "Museum of Modern Art (MoMA)",
+          "type": "attraction",
+          "coordinates": [40.7614, -73.9776],
+          "address": "11 W 53rd St",
+          "description": "World-class modern art",
+          "time_slot": "morning",
+          "time": "10:00-13:00",
+          "notes": "Pre-book timed tickets: $25, must-sees: Starry Night, Picasso, Monet"
+        },
+        {
+          "name": "Nike Flagship Store",
+          "type": "shopping",
+          "coordinates": [40.7589, -73.9759],
+          "address": "650 5th Ave",
+          "description": "6-floor athletic flagship",
+          "time_slot": "afternoon",
+          "notes": "Massive selection of sneakers and athletic wear"
+        },
+        {
+          "name": "Levi's Times Square",
+          "type": "shopping",
+          "coordinates": [40.758, -73.9855],
+          "address": "1535 Broadway",
+          "description": "Classic American denim store",
+          "time_slot": "afternoon",
+          "notes": "Full range of Levi's products"
+        },
+        {
+          "name": "Times Square Street Food",
+          "type": "area",
+          "coordinates": [40.758, -73.9855],
+          "address": "Times Square",
+          "description": "Street food and snack paradise",
+          "time_slot": "afternoon",
+          "time": "13:30-20:00",
+          "notes": "Perfect day for snack focus - street vendors everywhere!"
+        },
+        {
+          "name": "Koreatown (K-town)",
+          "type": "neighborhood",
+          "coordinates": [40.7489, -73.9877],
+          "address": "32nd Street",
+          "description": "Korean corn dogs and street food",
+          "time_slot": "afternoon",
+          "notes": "Authentic Korean street food experience"
+        },
+        {
+          "name": "Magnolia Bakery",
+          "type": "restaurant",
+          "coordinates": [40.758, -73.9855],
+          "address": "1240 6th Ave (Times Square area)",
+          "description": "Famous NYC cupcakes and banana pudding",
+          "time_slot": "afternoon",
+          "notes": "Multiple Midtown locations, much closer than uptown Levain"
+        },
+        {
+          "name": "Shake Shack Madison Square Park",
+          "type": "restaurant",
+          "coordinates": [40.7414, -73.9887],
+          "address": "Madison Square Park",
+          "description": "Original Shake Shack location",
+          "time_slot": "evening",
+          "notes": "Burger sampling - compare with Five Guys"
+        }
+      ],
+      "snack_crawl_highlights": [
+        "Crumbl Cookies locations",
+        "Halal carts - famous NYC street food",
+        "Junior's - famous NYC cheesecake",
+        "Eileen's Special Cheesecake - 100+ flavors",
+        "M&M's World - 3 floors of candy",
+        "Hershey's Chocolate World",
+        "Food trucks around Central Park South",
+        "Halal carts and pretzel vendors"
+      ],
+      "notes": [
+        "MoMA least crowded before 11 AM",
+        "Times Square street food - stick to busy carts for freshness",
+        "Download Foursquare app for food recommendations",
+        "Avoid chain restaurants in Times Square (overpriced)",
+        "Take 4/5/6 or N/Q/R/W back to LES"
+      ]
+    },
+    {
+      "day": 6,
+      "date": "October 17, 2024",
+      "day_name": "Friday",
+      "theme": "Roosevelt Island/Upper East Side Shopping",
+      "overview": "Extended Central Park exploration and Upper Fifth Avenue luxury shopping",
+      "schedule": {
+        "morning": "9:00-12:00",
+        "afternoon": "12:00-17:00",
+        "evening": "17:00-20:00"
+      },
+      "locations": [
+        {
+          "name": "Breakfast Options Day 6",
+          "type": "restaurant",
+          "coordinates": [40.77, -73.96],
+          "address": "Upper East Side",
+          "description": "UES breakfast before Roosevelt Island",
+          "time_slot": "morning",
+          "time": "9:00",
+          "notes": "Options: UES bagel shop, Bluestone Lane (Australian coffee), Local coffee cart near subway"
+        },
+        {
+          "name": "Roosevelt Island Tramway",
+          "type": "attraction",
+          "coordinates": [40.7614, -73.9606],
+          "address": "2nd Ave & E 59th St",
+          "description": "Aerial tramway with Manhattan views",
+          "time_slot": "morning",
+          "time": "9:30-10:15",
+          "notes": "Take F train to Lexington-63rd then transfer, $2.90 with MetroCard"
+        },
+        {
+          "name": "Roosevelt Island",
+          "type": "area",
+          "coordinates": [40.759, -73.9442],
+          "address": "Roosevelt Island",
+          "description": "Island with FDR Four Freedoms Park and promenade",
+          "time_slot": "morning",
+          "time": "10:15-11:15",
+          "notes": "Walk the promenade, great Manhattan views"
+        },
+        {
+          "name": "Central Park Extended Visit",
+          "type": "attraction",
+          "coordinates": [40.7739, -73.9705],
+          "address": "Central Park, 5th Ave & 64th St entrance",
+          "description": "Extended Central Park exploration (3 hours)",
+          "time_slot": "late_morning",
+          "time": "11:15-14:15",
+          "notes": "Bethesda Fountain, Bow Bridge, Strawberry Fields, Sheep Meadow, Mall and Literary Walk"
+        },
+        {
+          "name": "Upper Fifth Avenue Shopping",
+          "type": "shopping",
+          "coordinates": [40.7637, -73.9744],
+          "address": "5th Avenue 59th St and above",
+          "description": "Upper Fifth Avenue luxury shopping (3 hours)",
+          "time_slot": "afternoon",
+          "time": "14:15-17:15",
+          "notes": "Focus on 59th Street and above - away from Times Square area"
+        },
+        {
+          "name": "Tiffany & Co.",
+          "type": "shopping",
+          "coordinates": [40.7625, -73.9735],
+          "address": "727 5th Ave",
+          "description": "Iconic jewelry flagship",
+          "time_slot": "afternoon",
+          "notes": "Browse iconic jewelry, great for window shopping"
+        },
+        {
+          "name": "Bergdorf Goodman",
+          "type": "shopping",
+          "coordinates": [40.7642, -73.9744],
+          "address": "754 5th Ave",
+          "description": "Luxury department store",
+          "time_slot": "afternoon",
+          "notes": "High-end fashion and accessories"
+        },
+        {
+          "name": "Saks Fifth Avenue",
+          "type": "shopping",
+          "coordinates": [40.7584, -73.9776],
+          "address": "611 5th Ave",
+          "description": "Classic NYC shopping",
+          "time_slot": "afternoon",
+          "notes": "Iconic department store"
+        },
+        {
+          "name": "Apple Store Fifth Avenue",
+          "type": "shopping",
+          "coordinates": [40.7648, -73.9731],
+          "address": "767 5th Ave",
+          "description": "Iconic glass cube",
+          "time_slot": "afternoon",
+          "notes": "Famous glass cube design"
+        },
+        {
+          "name": "Madison Avenue Evening",
+          "type": "shopping",
+          "coordinates": [40.77, -73.97],
+          "address": "Madison Avenue, Upper East Side",
+          "description": "Evening boutique shopping",
+          "time_slot": "evening",
+          "time": "17:15-19:00",
+          "notes": "High-end boutiques and designer shops, less crowded in evening"
+        },
+        {
+          "name": "Plaza Food Hall",
+          "type": "food_hall",
+          "coordinates": [40.7644, -73.974],
+          "address": "1 W 59th St",
+          "description": "Gourmet food sampling",
+          "time_slot": "evening",
+          "time": "18:00",
+          "notes": "In basement of The Plaza, gourmet market"
+        },
+        {
+          "name": "Levain Bakery UES",
+          "type": "restaurant",
+          "coordinates": [40.7794, -73.9664],
+          "address": "1484 3rd Ave (UES location)",
+          "description": "Famous warm chocolate chip cookies",
+          "time_slot": "evening",
+          "time": "19:00",
+          "notes": "Perfect timing when you're already on UES - much closer than Times Square!"
+        }
+      ],
+      "food_options": [
+        "Street vendors throughout shopping areas",
+        "Gourmet markets for snacks",
+        "Levain Bakery UES location - warm cookies (now geographically logical!)",
+        "Food trucks near Central Park"
+      ],
+      "notes": [
+        "Focus Day 5 on Times Square/Lower Fifth Avenue (Nike, Levi's)",
+        "Day 6 focuses on Upper Fifth Avenue (59th St+) to avoid overlap",
+        "Extended Central Park time - 3 hours for proper exploration",
+        "Friday evening = less crowded shopping on Madison Avenue",
+        "Take 4/5/6 train back to LES"
+      ]
+    },
+    {
+      "day": 7,
+      "date": "October 18, 2024",
+      "day_name": "Saturday",
+      "theme": "SoHo/NoLita - Final Shopping + JFK Departure",
+      "overview": "Morning shopping marathon before 20:25 flight",
+      "schedule": {
+        "morning_early_afternoon": "9:30-15:00",
+        "departure_prep": "15:00-17:00",
+        "airport_transit": "16:30-20:25"
+      },
+      "locations": [
+        {
+          "name": "SoHo Shopping District",
+          "type": "shopping",
+          "coordinates": [40.723, -74.003],
+          "address": "Broadway, Spring St, Wooster St",
+          "description": "5 hours intensive shopping",
+          "time_slot": "morning",
+          "time": "10:00-15:00",
+          "notes": "Focus on must-haves: Nike SoHo, Carhartt WIP, mainstream brands"
+        },
+        {
+          "name": "Nike SoHo",
+          "type": "shopping",
+          "coordinates": [40.7254, -74.0033],
+          "address": "529 Broadway",
+          "description": "Nike SoHo location",
+          "time_slot": "morning",
+          "notes": "Second Nike flagship option"
+        },
+        {
+          "name": "Carhartt WIP",
+          "type": "shopping",
+          "coordinates": [40.722, -74.004],
+          "address": "SoHo area",
+          "description": "Workwear and streetwear",
+          "time_slot": "morning",
+          "notes": "Authentic American workwear brand"
+        },
+        {
+          "name": "Whole Foods SoHo",
+          "type": "shopping",
+          "coordinates": [40.728, -74.002],
+          "address": "95 E Houston St",
+          "description": "American supermarket experience",
+          "time_slot": "morning",
+          "notes": "Grab American snacks for flight/souvenirs, unique US grocery products"
+        },
+        {
+          "name": "NoLita Shopping",
+          "type": "shopping",
+          "coordinates": [40.722, -73.995],
+          "address": "Elizabeth St, Mott St",
+          "description": "Independent designers",
+          "time_slot": "morning",
+          "notes": "Focus on must-haves only due to time constraints"
+        },
+        {
+          "name": "Economy Candy",
+          "type": "shopping",
+          "coordinates": [40.7186, -73.9897],
+          "address": "108 Rivington St",
+          "description": "American candy souvenirs",
+          "time_slot": "morning",
+          "notes": "Stock up on American candy to take home"
+        },
+        {
+          "name": "JFK Airport",
+          "type": "airport",
+          "coordinates": [40.6413, -73.7781],
+          "address": "JFK Airport",
+          "description": "International departure",
+          "time_slot": "evening",
+          "time": "20:25",
+          "notes": "Flight departure to Denmark"
+        }
+      ],
+      "food_options": [
+        "Quick grab-and-go breakfast in NoLita",
+        "Prince St Pizza - pepperoni slice (cash only)",
+        "Street vendors for quick snacks",
+        "Whole Foods prepared foods for flight"
+      ],
+      "departure_logistics": {
+        "hotel_checkout": "15:00",
+        "packing_time": "15:00-15:30",
+        "final_preparations": "15:30-16:30",
+        "transport_options": ["AirTrain from Howard Beach (A train from LES) - ~1 hour total", "Taxi/Uber to JFK - 45-75 minutes depending on traffic"],
+        "airport_arrival": "17:30",
+        "check_in_time": "3+ hours for international flights",
+        "flight_departure": "20:25"
+      },
+      "notes": [
+        "Shortened shopping day but still 5 solid hours in SoHo",
+        "Saturday = many stores open at 11 AM on weekends, go early",
+        "Pack American snacks from Whole Foods for flight home",
+        "Keep receipts for tax refunds at airport",
+        "Save room in luggage for shopping finds"
+      ]
+    }
+  ],
+  "weather_backup_plans": {
+    "rainy_day": "Focus on Chelsea Market, SoHo shopping, MoMA",
+    "very_cold": "More time in Union Square/Herald Square underground connections",
+    "hot_weather": "Extra Central Park time, early morning activities"
+  },
+  "coordinate_corrections_made": [
+    "Replaced Gray's Papaya with better LES late-night options",
+    "Added Crif Dogs [40.7260, -73.9836] for late-night East Village food",
+    "Added Ray's Candy Store [40.7240, -73.9827] for 24-hour sweets",
+    "Updated Katz's description to clarify Saturday 24-hour operation only",
+    "All other coordinates verified as accurate for their addresses"
+  ],
+  "final_tips": [
+    "Tipping: 18-20% restaurants, $1-2 per drink at bars",
+    "Walking is often faster than subway for short distances",
+    "Download offline maps before arriving",
+    "Charge portable battery for photos",
+    "Many museums have 'pay-what-you-wish' hours",
+    "Happy hour specials 4-7 PM most places"
+  ],
+  "food_focus_summary": {
+    "street_food_priority": [
+      "Crumbl Cookies - Times Square, SoHo locations",
+      "Korean corn dogs - K-town (32nd St)",
+      "Food trucks - Financial District, Central Park, various neighborhoods",
+      "Market sampling - Chelsea Market, Essex Street, Time Out Market",
+      "Grab-and-go - Pizza slices, hot dogs, pretzels, halal carts",
+      "Bakeries - Levain, local bakeries for pastries and cookies"
+    ],
+    "replaced_sit_down_restaurants": [
+      "Replaced Pastis, Cull & Pistol with street food trucks",
+      "Replaced Lombardi's with Prince St Pizza slices",
+      "Replaced L'industrie with food truck options",
+      "Focus on markets and food halls over formal dining"
+    ]
+  },
+  "shopping_time_expanded": {
+    "day_2": "6+ hours Williamsburg shopping - vintage, local designers",
+    "day_3": "2 hours Canal Street shopping - knockoffs, electronics",
+    "day_4": "4+ hours Chelsea Market and Meatpacking shopping",
+    "day_6": "8 hours Fifth/Madison Avenue luxury shopping marathon",
+    "day_7": "5 hours SoHo/NoLita final shopping before departure",
+    "total_shopping_hours": "26+ dedicated shopping hours across the week"
+  },
+  "transportation_notes": {
+    "metrocard": "7-day unlimited: $33",
+    "walking_efficiency": "Often faster than subway for short distances",
+    "key_subway_lines": [
+      "4/5/6 - East side, good for Financial District to Upper East Side",
+      "L train - Williamsburg to Manhattan",
+      "A/C/E - West side, good for Chelsea/Meatpacking",
+      "N/Q/R/W - Times Square connections"
+    ]
+  },
+  "budget_considerations": {
+    "free_activities": ["Staten Island Ferry", "High Line walk", "Central Park", "Brooklyn Bridge walk", "Window shopping on Fifth Avenue"],
+    "expensive_items": ["9/11 Memorial Museum", "One World Observatory: $37-47", "MoMA: $25"],
+    "money_saving_strategies": ["Food trucks vs restaurants", "Happy hour specials", "Free samples at food stores", "Many museums have pay-what-you-wish hours"]
+  }
+}
+`))
+                .then(response => response.json())
+                .then(data => {
+                    tripData = data;
+                    console.log('Complete sample data loaded');
+                    initializeApp();
+                })
+                .catch(error => {
+                    console.error('Error loading sample data:', error);
+                    // Fallback to basic data structure
+                    tripData = { "trip_info": { "title": "NYC Sample Trip", "dates": "October 12-18, 2024" }, "days": [] };
+                    initializeApp();
+                });
+        }
     </script>
 </body>
 
